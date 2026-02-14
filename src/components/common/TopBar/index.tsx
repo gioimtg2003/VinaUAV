@@ -1,8 +1,14 @@
 import { SIZE_ICON } from '@/constants';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { Minus, Square, X } from 'lucide-react';
+import { KeyRound, Minus, Square, X } from 'lucide-react';
 import './styles.css';
 
+import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import ConnectChip from './ConnectChip';
 const COMMON_CLASSNAME_ICON =
   'border-none p-1 hover:bg-border hover:rounded-sm';
@@ -13,8 +19,21 @@ export default function Topbar() {
         <h2 className='text-primary h-fit text-xl font-bold'>VinaUAV</h2>
       </div>
       <div className='flex items-center justify-center gap-8 mr-2 shrink-0 h-full'>
-        <div className=' bg-white w-1 h-full'></div>
-        <ConnectChip />
+        <div className='flex items-center justify-between h-6 gap-2'>
+          <Tooltip delayDuration={400}>
+            <TooltipTrigger asChild>
+              <button className={COMMON_CLASSNAME_ICON}>
+                <KeyRound className='text-primary/80' size={SIZE_ICON} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Quản lý khóa của bạn</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Separator orientation='vertical' />
+          <ConnectChip />
+        </div>
 
         <div className='flex items-center justify-center gap-3'>
           <button
