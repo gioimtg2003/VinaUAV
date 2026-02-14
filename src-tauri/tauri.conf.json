@@ -12,9 +12,23 @@
   "app": {
     "windows": [
       {
-        "title": "vinauav",
-        "width": 800,
-        "height": 600
+        "title": "VinaUAV",
+        "width": 1400,
+        "height": 750,
+        "minWidth": 768,
+        "minHeight": 500,
+        "resizable": true,
+        "fullscreen": false,
+        "hiddenTitle": true,
+        "transparent": true,
+        "center": true,
+        "dragDropEnabled": true,
+        "decorations": false,
+        "windowEffects": {
+          "effects": ["sidebar"],
+          "state": "followsWindowActiveState",
+          "radius": 9
+        }
       }
     ],
     "security": {
