@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import {
   Popover,
   PopoverContent,
@@ -58,15 +59,15 @@ export default function ConnectChip() {
           </Tooltip>
         </button>
       </PopoverTrigger>
-      <PopoverContent className='w-80 bg-linear-to-r from-background to-surface text-primary'>
-        <div className='grid gap-4'>
-          <div className='space-y-2'>
-            <h4 className='leading-none font-medium text-center'>
-              Kết nối với mạch của bạn
-            </h4>
-            <div className='w-full flex justify-between items-center gap-3 mt-4'>
+      <PopoverContent className='w-min-80 w-fit max-w-93 bg-linear-to-r from-background to-surface text-primary'>
+        <div className='flex flex-col gap-4'>
+          <h4 className='leading-none font-medium text-center'>
+            Kết nối với mạch của bạn
+          </h4>
+          <div className='w-full h-full flex justify-between items-center gap-2'>
+            <div className='w-full flex justify-between items-center gap-1.5'>
               <Select value={selectedCom} onValueChange={setSelectedCom}>
-                <SelectTrigger className='w-full'>
+                <SelectTrigger className='w-full text-xs'>
                   <SelectValue placeholder='Chọn cổng kết nối' />
                 </SelectTrigger>
                 <SelectContent className='bg-background'>
@@ -96,7 +97,7 @@ export default function ConnectChip() {
               value={selectedBaudRate}
               onValueChange={setSelectedBaudRate}
             >
-              <SelectTrigger className='w-full mt-1'>
+              <SelectTrigger className='w-full text-xs'>
                 <SelectValue placeholder='Chọn tốc độ kết nối' />
               </SelectTrigger>
               <SelectContent className='bg-background'>
@@ -112,6 +113,13 @@ export default function ConnectChip() {
               </SelectContent>
             </Select>
           </div>
+        </div>
+        <div className='mt-3 flex flex-col gap-2'>
+          <p className='text-xs text-muted'>
+            Vui lòng chọn đúng cổng kết nối và tốc độ kết nối để kết nối với
+            mạch của bạn.
+          </p>
+          <Button size={'sm'}>Kết nối</Button>
         </div>
       </PopoverContent>
     </Popover>
