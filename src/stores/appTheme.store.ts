@@ -1,15 +1,15 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 interface AppThemeState {
-  themeID: string;
-  setTheme: (themeID: string) => void;
+  themeID: string
+  setTheme: (themeID: string) => void
 }
 
 export const appThemeStore = create<AppThemeState>()(
   persist(
     (set) => ({
-      themeID: "default",
+      themeID: 'default',
       setTheme: (themeID: string) => {
         // handle set variables
         // document.documentElement.style
@@ -19,9 +19,9 @@ export const appThemeStore = create<AppThemeState>()(
         // --color-border: #50514f;
         // --color-text-main: #f6f8ff;
         // --color-text-muted: #f7f7ff;
-        set({ themeID });
-      },
+        set({ themeID })
+      }
     }),
-    { name: "appTheme" },
-  ),
-);
+    { name: 'appTheme' }
+  )
+)

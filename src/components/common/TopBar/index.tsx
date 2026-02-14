@@ -1,37 +1,52 @@
-import { X } from "lucide-react";
-import "./styles.css";
+import { SIZE_ICON } from '@/constants'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import { Minus, Square, X } from 'lucide-react'
+import './styles.css'
+
+import ConnectChip from './ConnectChip'
+const COMMON_CLASSNAME_ICON = 'border-none p-1 hover:bg-border hover:rounded-sm'
 export default function Topbar() {
   return (
-    <div className="grid grid-cols-[auto_max-content] select-none h-12.5 fixed top-0 left-0 right-0  bg-background">
-      <div data-tauri-drag-region className="h-full w-full"></div>
-      <div className="flex items-center justify-center gap-2 mr-2">
-        <button id="titlebar-minimize" title="minimize">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-          >
-            <path fill="currentColor" d="M19 13H5v-2h14z" />
-          </svg>
-        </button>
-        <button id="titlebar-maximize" title="maximize">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-          >
-            <path fill="currentColor" d="M4 4h16v16H4zm2 4v10h12V8z" />
-          </svg>
-        </button>
-        <button
-          title="close"
-          className="border-none p-1 hover:bg-red-400 hover:rounded-sm"
-        >
-          <X color="#E3DFFF" size={16} />
-        </button>
+    <header className='w-full flex justify-between items-center select-none h-12.5 fixed top-0 left-0 right-0  bg-background  border-b border-b-border'>
+      <div data-tauri-drag-region className='h-full w-full flex items-center'>
+        <h2 className='text-primary h-fit text-xl font-bold'>VinaUAV</h2>
       </div>
-    </div>
-  );
+      <div className='flex items-center justify-center gap-8 mr-2 shrink-0'>
+        <ConnectChip />
+
+        <div className='flex items-center justify-center gap-3'>
+          <button
+            className={COMMON_CLASSNAME_ICON}
+            onClick={() => {
+              getCurrentWindow().minimize()
+            }}
+          >
+            <Minus className='text-primary/80' size={SIZE_ICON} />
+          </button>
+          <button
+            className={COMMON_CLASSNAME_ICON}
+            onClick={async () => {
+              const appWindow = getCurrentWindow()
+              if (await appWindow.isMaximized()) {
+                await appWindow.unmaximize()
+              } else {
+                await appWindow.maximize()
+              }
+            }}
+          >
+            <Square className='text-primary/80' size={SIZE_ICON} />
+          </button>
+
+          <button
+            className='border-none p-1 hover:bg-red-400 hover:rounded-sm'
+            onClick={() => {
+              getCurrentWindow().close()
+            }}
+          >
+            <X className='text-primary/80' size={SIZE_ICON} />
+          </button>
+        </div>
+      </div>
+    </header>
+  )
 }
