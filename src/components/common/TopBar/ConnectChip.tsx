@@ -37,6 +37,19 @@ export default function ConnectChip() {
   ];
 
   const connect = chipStore((store) => store?.isConnected);
+  const setConnect = chipStore((store) => store?.setIsConnected);
+
+  const handleConnect = () => {
+    // Implement the logic to connect to the selected COM port and baud rate
+    // Example: chipStore.connect(selectedCom, selectedBaudRate);
+    setConnect(true);
+  };
+
+  const handleDisconnect = () => {
+    // Implement the logic to disconnect from the connected COM port
+    // Example: chipStore.disconnect();
+    setConnect(false);
+  };
 
   return (
     <Popover>
@@ -119,7 +132,19 @@ export default function ConnectChip() {
             Vui lòng chọn đúng cổng kết nối và tốc độ kết nối để kết nối với
             mạch của bạn.
           </p>
-          <Button size={'sm'}>Kết nối</Button>
+          {connect ? (
+            <Button
+              size={'sm'}
+              variant={'destructive'}
+              onClick={handleDisconnect}
+            >
+              Ngắt kết nối
+            </Button>
+          ) : (
+            <Button size={'sm'} onClick={handleConnect}>
+              Kết nối
+            </Button>
+          )}
         </div>
       </PopoverContent>
     </Popover>

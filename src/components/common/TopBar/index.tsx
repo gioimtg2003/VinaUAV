@@ -1,6 +1,6 @@
 import { SIZE_ICON } from '@/constants';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { KeyRound, Minus, Square, X } from 'lucide-react';
+import { Bell, KeyRound, Minus, Square, X } from 'lucide-react';
 import './styles.css';
 
 import { Separator } from '@/components/ui/separator';
@@ -20,6 +20,8 @@ export default function Topbar() {
       </div>
       <div className='flex items-center justify-center gap-8 mr-2 shrink-0 h-full'>
         <div className='flex items-center justify-between h-6 gap-2'>
+          <ConnectChip />
+          <Separator orientation='vertical' />
           <Tooltip delayDuration={400}>
             <TooltipTrigger asChild>
               <button className={COMMON_CLASSNAME_ICON}>
@@ -30,9 +32,9 @@ export default function Topbar() {
               <p>Quản lý khóa của bạn</p>
             </TooltipContent>
           </Tooltip>
-
-          <Separator orientation='vertical' />
-          <ConnectChip />
+          <button className={COMMON_CLASSNAME_ICON}>
+            <Bell className='text-primary/80' size={SIZE_ICON} />
+          </button>
         </div>
 
         <div className='flex items-center justify-center gap-3'>

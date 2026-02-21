@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import {
   ContactShadows,
   Environment,
@@ -5,238 +6,209 @@ import {
   OrbitControls,
 } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
-
-import { cn } from '@/lib/utils';
 import {
   Activity,
+  AlertTriangle,
   Battery,
   Compass,
-  Cpu,
   Gauge,
   Map,
   Navigation,
-  Pause,
   Play,
   RotateCcw,
-  Settings,
   Wifi,
+  X,
+  Zap,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
+import Arm from './Drone/Arm';
+import BodyFrame from './Drone/BodyFrame';
+import GPSSensor from './Drone/GPSSensor';
+import Propeller from './Drone/Propeller';
 
+type MotorPosition = 'FL' | 'FR' | 'BL' | 'BR';
+
+interface MotorState {
+  id: MotorPosition;
+  label: string;
+  rpm: number;
+  status: 'idle' | 'testing' | 'error';
+  temp: number;
+}
 // A single propeller component
-const Propeller = ({
-  position,
-  rotationSpeed,
-}: {
-  position: [number, number, number];
-  rotationSpeed: number;
-}) => {
-  const ref = useRef<THREE.Group>(null);
-
-  useFrame((_, delta) => {
-    if (ref.current) {
-      ref.current.rotation.y += rotationSpeed * delta * 10;
-    }
-  });
-
-  return (
-    <group position={position} ref={ref}>
-      {/* Motor housing */}
-      <mesh position={[0, 0.05, 0]}>
-        <cylinderGeometry args={[0.08, 0.08, 0.1, 32]} />
-        <meshStandardMaterial color='#333' metalness={0.8} roughness={0.2} />
-      </mesh>
-      {/* Propeller Blades */}
-      <mesh position={[0, 0.12, 0]}>
-        <boxGeometry args={[1.2, 0.02, 0.15]} />
-        <meshStandardMaterial color='#111' metalness={0.5} roughness={0.5} />
-      </mesh>
-      <mesh position={[0, 0.12, 0]}>
-        <boxGeometry args={[0.15, 0.02, 1.2]} />
-        <meshStandardMaterial color='#111' metalness={0.5} roughness={0.5} />
-      </mesh>
-      {/* Center cap */}
-      <mesh position={[0, 0.14, 0]}>
-        <sphereGeometry args={[0.06, 16, 16]} />
-        <meshStandardMaterial
-          color='#ef4444'
-          emissive='#ef4444'
-          emissiveIntensity={0.5}
-        />
-      </mesh>
-    </group>
-  );
-};
-
-// The Main Drone Body
-const Drone = ({
-  pitch,
-  roll,
-  yaw,
-  altitude,
-  throttle,
-}: {
+interface IMUData {
   pitch: number;
   roll: number;
   yaw: number;
   altitude: number;
   throttle: number;
-}) => {
-  const groupRef = useRef<THREE.Group>(null);
+}
 
-  // Calculate propeller speed based on throttle (simulated)
-  const propSpeed = 0.5 + (throttle / 100) * 2;
+// The Main Drone Body
+const Drone = React.memo(
+  ({
+    imuRef,
+    motors,
+    selectedMotor,
+    onMotorClick,
+  }: {
+    imuRef: React.MutableRefObject<IMUData>;
+    motors: Record<MotorPosition, MotorState>;
+    selectedMotor: MotorPosition | null;
+    onMotorClick: (id: MotorPosition) => void;
+  }) => {
+    const groupRef = useRef<THREE.Group>(null);
 
-  useFrame(() => {
-    if (groupRef.current) {
-      // Apply IMU rotations
-      // Note: In Three.js, rotations are usually applied in order X, Y, Z.
-      // Pitch (X), Yaw (Y), Roll (Z) - Adjusting for standard aerospace coordinates
-      groupRef.current.rotation.x = -pitch * (Math.PI / 180);
-      groupRef.current.rotation.z = -roll * (Math.PI / 180);
-      groupRef.current.rotation.y = -yaw * (Math.PI / 180);
+    // Refs for propeller speeds to avoid re-renders
+    const flSpeed = useRef(0);
+    const frSpeed = useRef(0);
+    const blSpeed = useRef(0);
+    const brSpeed = useRef(0);
 
-      // Update altitude (Y position)
-      groupRef.current.position.y = altitude;
-    }
-  });
+    useFrame(() => {
+      if (groupRef.current) {
+        const { pitch, roll, yaw, throttle } = imuRef.current;
 
-  return (
-    <group ref={groupRef}>
-      {/* Main Body */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[0.6, 0.15, 0.4]} />
-        <meshStandardMaterial color='#e2e8f0' metalness={0.3} roughness={0.4} />
-      </mesh>
+        // Apply rotations directly
+        groupRef.current.rotation.x = -pitch * (Math.PI / 180);
+        groupRef.current.rotation.z = -roll * (Math.PI / 180);
+        groupRef.current.rotation.y = -yaw * (Math.PI / 180);
+        groupRef.current.position.y = altitude;
 
-      {/* Top Shell Detail */}
-      <mesh position={[0, 0.08, 0]} castShadow>
-        <boxGeometry args={[0.5, 0.05, 0.3]} />
-        <meshStandardMaterial color='#f8fafc' metalness={0.1} roughness={0.2} />
-      </mesh>
+        // Update propeller speeds in refs
+        const baseSpeed = 0.5 + (throttle / 100) * 2;
 
-      {/* Arms */}
-      <group>
-        {/* Front Left */}
-        <mesh
-          position={[-0.4, 0, -0.4]}
-          rotation={[0, Math.PI / 4, 0]}
-          castShadow
-        >
-          <boxGeometry args={[0.6, 0.05, 0.08]} />
-          <meshStandardMaterial color='#334155' />
+        flSpeed.current = motors.FL.status === 'testing' ? 5 : baseSpeed;
+        frSpeed.current = motors.FR.status === 'testing' ? -5 : -baseSpeed;
+        blSpeed.current = motors.BL.status === 'testing' ? -5 : -baseSpeed;
+        brSpeed.current = motors.BR.status === 'testing' ? 5 : baseSpeed;
+      }
+    });
+
+    // Destructure for JSX readability
+    const { altitude } = imuRef.current;
+
+    return (
+      <group ref={groupRef}>
+        {/*  top Main Body */}
+        <BodyFrame />
+        {/* Top Shell Detail */}
+
+        {/* Arms */}
+        <Arm />
+
+        {/* GPS */}
+        <GPSSensor />
+
+        {/* Propellers - Pass refs instead of state values */}
+        <Propeller
+          position={[-0.65, -0.035, -0.65]}
+          speed={flSpeed}
+          id='FL'
+          isSelected={selectedMotor === 'FL'}
+        />
+
+        <Propeller
+          position={[0.65, -0.035, -0.65]}
+          speed={frSpeed}
+          id='FR'
+          isSelected={selectedMotor === 'FR'}
+          onClick={onMotorClick}
+        />
+        <Propeller
+          position={[-0.65, -0.035, 0.65]}
+          speed={blSpeed}
+          id='BL'
+          isSelected={selectedMotor === 'BL'}
+          onClick={onMotorClick}
+        />
+        <Propeller
+          position={[0.65, -0.035, 0.65]}
+          speed={brSpeed}
+          id='BR'
+          isSelected={selectedMotor === 'BR'}
+          onClick={onMotorClick}
+        />
+
+        {/* LED Indicators */}
+        {/*<mesh position={[-0.3, 0.05, -0.2]}>
+          <sphereGeometry args={[0.03, 8, 8]} />
+          <meshBasicMaterial color='#ef4444' />
         </mesh>
-        {/* Front Right */}
-        <mesh
-          position={[0.4, 0, -0.4]}
-          rotation={[0, -Math.PI / 4, 0]}
-          castShadow
-        >
-          <boxGeometry args={[0.6, 0.05, 0.08]} />
-          <meshStandardMaterial color='#334155' />
-        </mesh>
-        {/* Back Left */}
-        <mesh
-          position={[-0.4, 0, 0.4]}
-          rotation={[0, -Math.PI / 4, 0]}
-          castShadow
-        >
-          <boxGeometry args={[0.6, 0.05, 0.08]} />
-          <meshStandardMaterial color='#334155' />
-        </mesh>
-        {/* Back Right */}
-        <mesh
-          position={[0.4, 0, 0.4]}
-          rotation={[0, Math.PI / 4, 0]}
-          castShadow
-        >
-          <boxGeometry args={[0.6, 0.05, 0.08]} />
-          <meshStandardMaterial color='#334155' />
-        </mesh>
+        <mesh position={[0.3, 0.05, -0.2]}>
+          <sphereGeometry args={[0.03, 8, 8]} />
+          <meshBasicMaterial color='#22c55e' />
+        </mesh>*/}
+
+        {/* Camera Gimbal */}
+        <group position={[0, -0.1, 0.2]}>
+          <mesh castShadow>
+            <sphereGeometry args={[0.08, 16, 16]} />
+            <meshStandardMaterial color='#1e293b' />
+          </mesh>
+          <mesh position={[0, 0, 0.06]}>
+            <cylinderGeometry args={[0.04, 0.04, 0.08, 16]} />
+            <meshStandardMaterial color='#0f172a' />
+          </mesh>
+          <mesh position={[0, 0, 0.1]}>
+            <cylinderGeometry args={[0.02, 0.02, 0.02, 16]} />
+            <meshPhysicalMaterial
+              color='#3b82f6'
+              transmission={0.5}
+              opacity={0.8}
+              roughness={0}
+              metalness={0}
+            />
+          </mesh>
+        </group>
       </group>
+    );
+  }
+);
 
-      {/* Propellers */}
-      <Propeller position={[-0.7, 0, -0.7]} rotationSpeed={propSpeed} />
-      <Propeller position={[0.7, 0, -0.7]} rotationSpeed={-propSpeed} />
-      <Propeller position={[-0.7, 0, 0.7]} rotationSpeed={-propSpeed} />
-      <Propeller position={[0.7, 0, 0.7]} rotationSpeed={propSpeed} />
-
-      {/* LED Indicators */}
-      <mesh position={[-0.3, 0.05, -0.2]}>
-        <sphereGeometry args={[0.03, 8, 8]} />
-        <meshBasicMaterial color='#ef4444' />
-      </mesh>
-      <mesh position={[0.3, 0.05, -0.2]}>
-        <sphereGeometry args={[0.03, 8, 8]} />
-        <meshBasicMaterial color='#22c55e' />
-      </mesh>
-
-      {/* Camera Gimbal */}
-      <group position={[0, -0.1, 0.2]}>
-        <mesh castShadow>
-          <sphereGeometry args={[0.08, 16, 16]} />
-          <meshStandardMaterial color='#1e293b' />
-        </mesh>
-        <mesh position={[0, 0, 0.06]}>
-          <cylinderGeometry
-            args={[0.04, 0.04, 0.08, 16]}
-            rotation={[Math.PI / 2, 0, 0]}
-          />
-          <meshStandardMaterial color='#0f172a' />
-        </mesh>
-        {/* Lens */}
-        <mesh position={[0, 0, 0.1]}>
-          <cylinderGeometry
-            args={[0.02, 0.02, 0.02, 16]}
-            rotation={[Math.PI / 2, 0, 0]}
-          />
-          <meshPhysicalMaterial
-            color='#3b82f6'
-            transmission={0.5}
-            opacity={0.8}
-            roughness={0}
-            metalness={0}
-          />
-        </mesh>
-      </group>
-    </group>
-  );
-};
+Drone.displayName = 'Drone';
 
 // --- UI Components ---
 
-const TelemetryCard = ({
-  label,
-  value,
-  unit,
-  icon: Icon,
-  color = 'text-slate-200',
-  subValue,
-}: {
-  label: string;
-  value: string | number;
-  unit: string;
-  icon: any;
-  color?: string;
-  subValue?: string;
-}) => (
-  <div className='bg-slate-900/80 backdrop-blur-md border border-slate-700/50 p-3 rounded-lg flex items-center gap-3 min-w-[140px]'>
-    <div className={cn('p-2 rounded-md bg-slate-800/50', color)}>
-      <Icon size={18} />
-    </div>
-    <div>
-      <div className='text-[10px] uppercase tracking-wider text-slate-400 font-semibold'>
-        {label}
+const TelemetryCard = React.memo(
+  ({
+    label,
+    value,
+    unit,
+    icon: Icon,
+    color = 'text-slate-200',
+    subValue,
+  }: {
+    label: string;
+    value: string | number;
+    unit: string;
+    icon: any;
+    color?: string;
+    subValue?: string;
+  }) => (
+    <div className='bg-slate-900/80 backdrop-blur-md border border-slate-700/50 p-3 rounded-lg flex items-center gap-3 min-w-[140px]'>
+      <div className={cn('p-2 rounded-md bg-slate-800/50', color)}>
+        <Icon size={18} />
       </div>
-      <div className='text-lg font-mono font-bold text-slate-100'>
-        {value}
-        <span className='text-xs text-slate-500 ml-1'>{unit}</span>
+      <div>
+        <div className='text-[10px] uppercase tracking-wider text-slate-400 font-semibold'>
+          {label}
+        </div>
+        <div className='text-lg font-mono font-bold text-slate-100'>
+          {value}
+          <span className='text-xs text-slate-500 ml-1'>{unit}</span>
+        </div>
+        {subValue && (
+          <div className='text-[10px] text-slate-500'>{subValue}</div>
+        )}
       </div>
-      {subValue && <div className='text-[10px] text-slate-500'>{subValue}</div>}
     </div>
-  </div>
+  )
 );
+
+TelemetryCard.displayName = 'TelemetryCard';
 
 const ControlSlider = ({
   label,
@@ -273,14 +245,30 @@ const ControlSlider = ({
 // --- Main Application ---
 
 export default function DroneVisualizer() {
-  // State for IMU Data
-  const [imuData, setImuData] = useState({
+  // OPTIMIZATION: Use Ref for high-frequency IMU data
+  // This prevents React re-renders on every frame update
+  const imuRef = useRef<IMUData>({
     pitch: 0,
     roll: 0,
     yaw: 0,
     altitude: 2,
     throttle: 0,
   });
+
+  // State for UI (throttled updates)
+  const [uiData, setUiData] = useState<IMUData>(imuRef.current);
+
+  // Motor States
+  const [motors, setMotors] = useState<Record<MotorPosition, MotorState>>({
+    FL: { id: 'FL', label: 'Front Left', rpm: 0, status: 'idle', temp: 24 },
+    FR: { id: 'FR', label: 'Front Right', rpm: 0, status: 'idle', temp: 24 },
+    BL: { id: 'BL', label: 'Back Left', rpm: 0, status: 'idle', temp: 24 },
+    BR: { id: 'BR', label: 'Back Right', rpm: 0, status: 'idle', temp: 24 },
+  });
+
+  const [selectedMotor, setSelectedMotor] = useState<MotorPosition | null>(
+    null
+  );
 
   // Simulation State
   const [isSimulating, setIsSimulating] = useState(false);
@@ -290,24 +278,33 @@ export default function DroneVisualizer() {
 
   // Refs for simulation loop
   const timeRef = useRef(0);
-  const animationFrameRef = useRef<number | undefined>(undefined);
+  const animationFrameRef = useRef<number | null>(null);
+  const lastUiUpdateRef = useRef(0);
 
   // Simulation Loop
   useEffect(() => {
     if (isSimulating && simulationMode === 'auto') {
-      const animate = () => {
+      const animate = (time: number) => {
         timeRef.current += 0.01;
-        setImuData((prev) => ({
-          ...prev,
+
+        // Update Ref (High Performance)
+        imuRef.current = {
           pitch: Math.sin(timeRef.current) * 15,
           roll: Math.cos(timeRef.current * 0.7) * 15,
-          yaw: (prev.yaw + 0.5) % 360,
+          yaw: (imuRef.current.yaw + 0.5) % 360,
           altitude: 2 + Math.sin(timeRef.current * 2) * 0.5,
           throttle: 40 + Math.sin(timeRef.current * 3) * 20,
-        }));
+        };
+
+        // Throttle UI Updates (every 100ms)
+        if (time - lastUiUpdateRef.current > 100) {
+          setUiData({ ...imuRef.current });
+          lastUiUpdateRef.current = time;
+        }
+
         animationFrameRef.current = requestAnimationFrame(animate);
       };
-      animate();
+      animationFrameRef.current = requestAnimationFrame(animate);
     } else {
       if (animationFrameRef.current)
         cancelAnimationFrame(animationFrameRef.current);
@@ -320,15 +317,60 @@ export default function DroneVisualizer() {
 
   const resetDrone = () => {
     setIsSimulating(false);
-    setImuData({ pitch: 0, roll: 0, yaw: 0, altitude: 2, throttle: 0 });
+    imuRef.current = { pitch: 0, roll: 0, yaw: 0, altitude: 2, throttle: 0 };
+    setUiData({ ...imuRef.current });
+    setSelectedMotor(null);
+    setMotors((prev) => ({
+      FL: { ...prev.FL, status: 'idle', rpm: 0 },
+      FR: { ...prev.FR, status: 'idle', rpm: 0 },
+      BL: { ...prev.BL, status: 'idle', rpm: 0 },
+      BR: { ...prev.BR, status: 'idle', rpm: 0 },
+    }));
     timeRef.current = 0;
   };
 
+  const handleMotorClick = useCallback((id: MotorPosition) => {
+    setSelectedMotor(id);
+  }, []);
+
+  const handleTestMotor = () => {
+    if (!selectedMotor) return;
+
+    setMotors((prev) => ({
+      ...prev,
+      [selectedMotor]: {
+        ...prev[selectedMotor],
+        status: 'testing',
+        rpm: 8500,
+      },
+    }));
+
+    setTimeout(() => {
+      setMotors((prev) => ({
+        ...prev,
+        [selectedMotor]: {
+          ...prev[selectedMotor],
+          status: 'idle',
+          rpm: 0,
+        },
+      }));
+    }, 3000);
+  };
+
+  // Manual Control Handlers
+  const updateImuManual = (key: keyof IMUData, value: number) => {
+    imuRef.current = { ...imuRef.current, [key]: value };
+    setUiData({ ...imuRef.current });
+  };
+
   return (
-    <div className='relative w-full h-full bg-background text-slate-200 overflow-hidden font-sans selection:bg-blue-500/30'>
+    <div className='relative w-full h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans selection:bg-blue-500/30'>
       {/* 3D Canvas */}
       <div className='absolute inset-0 z-0'>
-        <Canvas shadows camera={{ position: [5, 4, 5], fov: 45 }}>
+        <Canvas shadows camera={{ position: [0, 8, 10], fov: 45 }}>
+          <color attach='background' args={['#0f172a']} />
+          <fog attach='fog' args={['#0f172a', 5, 20]} />
+
           <ambientLight intensity={0.4} />
           <directionalLight
             position={[5, 10, 7]}
@@ -353,11 +395,10 @@ export default function DroneVisualizer() {
           />
 
           <Drone
-            pitch={imuData.pitch}
-            roll={imuData.roll}
-            yaw={imuData.yaw}
-            altitude={imuData.altitude}
-            throttle={imuData.throttle}
+            imuRef={imuRef}
+            motors={motors}
+            selectedMotor={selectedMotor}
+            onMotorClick={handleMotorClick}
           />
 
           <ContactShadows
@@ -370,7 +411,7 @@ export default function DroneVisualizer() {
 
           <OrbitControls
             enablePan={true}
-            enableZoom={false}
+            enableZoom={true}
             minDistance={3}
             maxDistance={15}
             maxPolarAngle={Math.PI / 2 - 0.1}
@@ -417,35 +458,35 @@ export default function DroneVisualizer() {
       <div className='absolute top-24 left-4 z-10 flex flex-col gap-3 pointer-events-auto'>
         <TelemetryCard
           label='Pitch'
-          value={imuData.pitch.toFixed(1)}
+          value={uiData.pitch.toFixed(1)}
           unit='°'
           icon={Navigation}
           color='text-blue-400'
         />
         <TelemetryCard
           label='Roll'
-          value={imuData.roll.toFixed(1)}
+          value={uiData.roll.toFixed(1)}
           unit='°'
           icon={RotateCcw}
           color='text-purple-400'
         />
         <TelemetryCard
           label='Yaw'
-          value={imuData.yaw.toFixed(1)}
+          value={uiData.yaw.toFixed(1)}
           unit='°'
           icon={Compass}
           color='text-orange-400'
         />
         <TelemetryCard
           label='Altitude'
-          value={imuData.altitude.toFixed(2)}
+          value={uiData.altitude.toFixed(2)}
           unit='m'
           icon={Map}
           color='text-emerald-400'
         />
         <TelemetryCard
           label='Speed'
-          value={(Math.abs(imuData.pitch) + Math.abs(imuData.roll)).toFixed(1)}
+          value={(Math.abs(uiData.pitch) + Math.abs(uiData.roll)).toFixed(1)}
           unit='m/s'
           icon={Gauge}
           color='text-rose-400'
@@ -454,113 +495,6 @@ export default function DroneVisualizer() {
 
       {/* Right Panel: Controls */}
       <div className='absolute top-24 right-4 z-10 w-64 pointer-events-auto'>
-        <div className='bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 rounded-xl overflow-hidden shadow-2xl'>
-          <div className='p-3 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/50'>
-            <div className='flex items-center gap-2 text-slate-200'>
-              <Cpu size={16} className='text-blue-400' />
-              <span className='text-sm font-bold'>Flight Control</span>
-            </div>
-            <Settings
-              size={14}
-              className='text-slate-500 cursor-pointer hover:text-slate-300'
-            />
-          </div>
-
-          <div className='p-4 space-y-6'>
-            {/* Mode Toggle */}
-            <div className='flex bg-slate-800 rounded-lg p-1'>
-              <button
-                onClick={() => setSimulationMode('manual')}
-                className={cn(
-                  'flex-1 py-1.5 text-xs font-medium rounded-md transition-all',
-                  simulationMode === 'manual'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'text-slate-400 hover:text-slate-200'
-                )}
-              >
-                Manual
-              </button>
-              <button
-                onClick={() => setSimulationMode('auto')}
-                className={cn(
-                  'flex-1 py-1.5 text-xs font-medium rounded-md transition-all',
-                  simulationMode === 'auto'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'text-slate-400 hover:text-slate-200'
-                )}
-              >
-                Auto-Pilot
-              </button>
-            </div>
-
-            {/* Sliders (Only active in Manual) */}
-            <div
-              className={cn(
-                'space-y-4 transition-opacity',
-                simulationMode === 'auto'
-                  ? 'opacity-50 pointer-events-none'
-                  : 'opacity-100'
-              )}
-            >
-              <ControlSlider
-                label='Pitch'
-                value={imuData.pitch}
-                onChange={(v) => setImuData((p) => ({ ...p, pitch: v }))}
-              />
-              <ControlSlider
-                label='Roll'
-                value={imuData.roll}
-                onChange={(v) => setImuData((p) => ({ ...p, roll: v }))}
-              />
-              <ControlSlider
-                label='Yaw'
-                value={imuData.yaw}
-                min={0}
-                max={360}
-                onChange={(v) => setImuData((p) => ({ ...p, yaw: v }))}
-              />
-              <ControlSlider
-                label='Altitude'
-                value={imuData.altitude}
-                min={0}
-                max={10}
-                step={0.1}
-                onChange={(v) => setImuData((p) => ({ ...p, altitude: v }))}
-              />
-              <ControlSlider
-                label='Throttle'
-                value={imuData.throttle}
-                min={0}
-                max={100}
-                onChange={(v) => setImuData((p) => ({ ...p, throttle: v }))}
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div className='grid grid-cols-2 gap-2 pt-2'>
-              <button
-                onClick={() => setIsSimulating(!isSimulating)}
-                className={cn(
-                  'flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all',
-                  isSimulating
-                    ? 'bg-amber-500/20 text-amber-500 border border-amber-500/50 hover:bg-amber-500/30'
-                    : 'bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-900/20'
-                )}
-              >
-                {isSimulating ? <Pause size={16} /> : <Play size={16} />}
-                {isSimulating ? 'PAUSE' : 'START'}
-              </button>
-              <button
-                onClick={resetDrone}
-                className='flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition-all'
-              >
-                <RotateCcw size={16} />
-                RESET
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Mini Log */}
         <div className='mt-4 bg-slate-900/80 backdrop-blur border border-slate-700/50 rounded-xl p-3 h-32 overflow-hidden'>
           <div className='text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 flex items-center gap-2'>
@@ -590,41 +524,149 @@ export default function DroneVisualizer() {
         </div>
       </div>
 
-      {/* Bottom Center: Artificial Horizon / Compass */}
+      {/* Motor Test Modal */}
+      <AnimatePresence>
+        {selectedMotor && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className='absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm'
+            onClick={() => setSelectedMotor(null)}
+          >
+            <motion.div
+              className='bg-slate-900 border border-slate-700 rounded-2xl p-6 w-80 shadow-2xl relative'
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedMotor(null)}
+                className='absolute top-4 right-4 text-slate-500 hover:text-slate-300'
+              >
+                <X size={20} />
+              </button>
+
+              <div className='flex items-center gap-3 mb-6'>
+                <div className='p-3 bg-blue-500/10 rounded-xl'>
+                  <Zap className='text-blue-400' size={24} />
+                </div>
+                <div>
+                  <h3 className='text-lg font-bold text-white'>Motor Test</h3>
+                  <p className='text-sm text-slate-400'>
+                    {motors[selectedMotor].label} ({selectedMotor})
+                  </p>
+                </div>
+              </div>
+
+              <div className='space-y-4 mb-6'>
+                <div className='flex justify-between items-center p-3 bg-slate-800/50 rounded-lg'>
+                  <span className='text-sm text-slate-400'>Status</span>
+                  <span
+                    className={cn(
+                      'text-sm font-bold px-2 py-1 rounded',
+                      motors[selectedMotor].status === 'testing'
+                        ? 'bg-amber-500/20 text-amber-400'
+                        : 'bg-slate-700 text-slate-300'
+                    )}
+                  >
+                    {motors[selectedMotor].status === 'testing'
+                      ? 'TESTING...'
+                      : 'IDLE'}
+                  </span>
+                </div>
+                <div className='flex justify-between items-center p-3 bg-slate-800/50 rounded-lg'>
+                  <span className='text-sm text-slate-400'>Current RPM</span>
+                  <span className='text-sm font-mono text-slate-200'>
+                    {motors[selectedMotor].rpm}
+                  </span>
+                </div>
+                <div className='flex justify-between items-center p-3 bg-slate-800/50 rounded-lg'>
+                  <span className='text-sm text-slate-400'>Temperature</span>
+                  <span className='text-sm font-mono text-slate-200'>
+                    {motors[selectedMotor].temp}°C
+                  </span>
+                </div>
+              </div>
+
+              <div className='grid grid-cols-2 gap-3'>
+                <button
+                  onClick={handleTestMotor}
+                  disabled={motors[selectedMotor].status === 'testing'}
+                  className={cn(
+                    'flex items-center justify-center gap-2 py-2.5 rounded-lg font-bold text-sm transition-all',
+                    motors[selectedMotor].status === 'testing'
+                      ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20'
+                  )}
+                >
+                  {motors[selectedMotor].status === 'testing' ? (
+                    <RotateCcw className='animate-spin' size={16} />
+                  ) : (
+                    <Play size={16} />
+                  )}
+                  {motors[selectedMotor].status === 'testing'
+                    ? 'RUNNING'
+                    : 'TEST MOTOR'}
+                </button>
+                <button
+                  onClick={() => setSelectedMotor(null)}
+                  className='py-2.5 rounded-lg font-bold text-sm bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all'
+                >
+                  CLOSE
+                </button>
+              </div>
+
+              {motors[selectedMotor].status === 'testing' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className='mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-2'
+                >
+                  <AlertTriangle
+                    size={16}
+                    className='text-amber-500 shrink-0 mt-0.5'
+                  />
+                  <p className='text-xs text-amber-200/80'>
+                    Warning: Motor is spinning at high speed. Keep clear of
+                    propellers.
+                  </p>
+                </motion.div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bottom Center: Artificial Horizon
       <div className='absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none'>
         <div className='relative w-64 h-32'>
-          {/* Artificial Horizon Background */}
           <div className='absolute inset-0 bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-700/50 overflow-hidden'>
             <div
               className='absolute w-[200%] h-[200%] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-100 ease-linear'
               style={{
-                transform: `translate(-50%, -50%) rotate(${imuData.roll}deg) translateY(${imuData.pitch * 2}px)`,
+                transform: `translate(-50%, -50%) rotate(${uiData.roll}deg) translateY(${uiData.pitch * 2}px)`,
                 background:
                   'linear-gradient(to bottom, #3b82f6 50%, #d97706 50%)',
                 opacity: 0.3,
               }}
             >
-              {/* Horizon Lines */}
               <div className='absolute top-1/2 left-0 w-full h-[1px] bg-white/50' />
               <div className='absolute top-[40%] left-[20%] w-[60%] h-[1px] bg-white/20' />
               <div className='absolute top-[60%] left-[20%] w-[60%] h-[1px] bg-white/20' />
             </div>
 
-            {/* Center Crosshair */}
             <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
               <div className='w-12 h-1 bg-yellow-400/80 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.5)]' />
               <div className='absolute w-1 h-4 bg-yellow-400/80' />
             </div>
 
-            {/* Yaw Indicator */}
             <div className='absolute top-2 left-0 right-0 flex justify-center'>
               <div className='bg-slate-900/80 px-3 py-0.5 rounded-full border border-slate-700 text-[10px] font-mono text-slate-300'>
-                {imuData.yaw.toFixed(0)}°
+                {uiData.yaw.toFixed(0)}°
               </div>
             </div>
           </div>
         </div>
-      </div>
+        </div>*/}
     </div>
   );
 }

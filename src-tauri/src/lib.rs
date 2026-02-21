@@ -37,35 +37,6 @@ const links: [(&str, &str, &str); 5] = [
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .setup(|app| {
-            // remove menu item for windows
-            #[cfg(target_os = "windows")]
-            {
-                use tauri::menu::Menu;
-                if let Ok(empty_menu) = MenuBuilder::new(app.handle()).build() {
-                    let _ = app.handle().set_menu(empty_menu);
-                }
-            }
-            let menu = MenuBuilder::new(app)
-                .text("open", "Open")
-                .text("close", "Close")
-                .check("check_item", "Check Item")
-                .separator()
-                .text("disabled_item", "Disabled Item")
-                .text("status", "Status: Processing...")
-                .fullscreen()
-                .build()?;
-
-            app.set_menu(menu.clone())?;
-
-            // Update individual menu item text
-            menu.get("status")
-                .unwrap()
-                .as_menuitem_unchecked()
-                .set_text("Status: Ready")?;
-
-            Ok(())
-        })
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![greet])
         .run(tauri::generate_context!())
