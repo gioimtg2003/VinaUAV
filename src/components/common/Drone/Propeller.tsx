@@ -69,19 +69,19 @@ const Propeller = (props: PropellerProps) => {
       position={position}
       ref={ref}
       onClick={(e) => {
-        if (disabledHover) return;
+        if (!disabledHover) return;
         e.stopPropagation();
         onClick?.(id);
       }}
       onPointerOver={(e) => {
-        if (disabledHover) return;
+        if (!disabledHover) return;
 
         e.stopPropagation();
         setHovered(true);
         document.body.style.cursor = 'pointer';
       }}
       onPointerOut={() => {
-        if (disabledHover) return;
+        if (!disabledHover) return;
 
         setHovered(false);
         document.body.style.cursor = 'auto';

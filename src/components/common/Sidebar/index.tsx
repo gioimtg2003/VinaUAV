@@ -54,7 +54,7 @@ export default function AppSidebar() {
               />
               <div className='flex flex-col gap-0.5 text-text-main leading-none'>
                 <span className='font-medium'>VinaUAV</span>
-                <span className='text-xs'>v1.0.0</span>
+                <span className='text-xs'>v{}</span>
               </div>
             </div>
           </SidebarMenuButton>

@@ -76,7 +76,7 @@ export default function OverviewScreen() {
   }, [isSimulating, simulationMode]);
 
   return (
-    <div className='relative w-full h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans selection:bg-blue-500/30'>
+    <div className='relative w-full h-screen bg-background text-text-main overflow-hidden'>
       <div className='absolute inset-0 z-0'>
         <Canvas shadows camera={{ position: [0, 8, 10], fov: 45 }}>
           <color attach='background' args={['#0f172a']} />
