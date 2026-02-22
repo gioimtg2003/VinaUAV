@@ -40,6 +40,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "publisher": "Nguyen Cong Gioi",
     "copyright": "Copyright © 2026 Nguyen Cong Gioi",
@@ -51,5 +52,13 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEIzREQyNjZFQTVDMzc0NTIKUldSU2RNT2xiaWJkczIyTmdQNWNaUVo5dHU3UWphQkE0MktIeVFDcVh2UHFiMi9hYlR5NSsvdjQK",
+      "endpoints": [
+        "https://github.com/gioimtg2003/VinaUAV/releases/download/latest.json"
+      ]
+    }
   }
 }

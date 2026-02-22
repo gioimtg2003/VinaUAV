@@ -210,7 +210,7 @@ const TelemetryCard = React.memo(
 
 TelemetryCard.displayName = 'TelemetryCard';
 
-const ControlSlider = ({
+export const ControlSlider = ({
   label,
   value,
   onChange,
@@ -271,10 +271,8 @@ export default function DroneVisualizer() {
   );
 
   // Simulation State
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [simulationMode, setSimulationMode] = useState<'manual' | 'auto'>(
-    'manual'
-  );
+  const [isSimulating] = useState(false);
+  const [simulationMode] = useState<'manual' | 'auto'>('manual');
 
   // Refs for simulation loop
   const timeRef = useRef(0);
@@ -315,19 +313,19 @@ export default function DroneVisualizer() {
     };
   }, [isSimulating, simulationMode]);
 
-  const resetDrone = () => {
-    setIsSimulating(false);
-    imuRef.current = { pitch: 0, roll: 0, yaw: 0, altitude: 2, throttle: 0 };
-    setUiData({ ...imuRef.current });
-    setSelectedMotor(null);
-    setMotors((prev) => ({
-      FL: { ...prev.FL, status: 'idle', rpm: 0 },
-      FR: { ...prev.FR, status: 'idle', rpm: 0 },
-      BL: { ...prev.BL, status: 'idle', rpm: 0 },
-      BR: { ...prev.BR, status: 'idle', rpm: 0 },
-    }));
-    timeRef.current = 0;
-  };
+  // const resetDrone = () => {
+  //   setIsSimulating(false);
+  //   imuRef.current = { pitch: 0, roll: 0, yaw: 0, altitude: 2, throttle: 0 };
+  //   setUiData({ ...imuRef.current });
+  //   setSelectedMotor(null);
+  //   setMotors((prev) => ({
+  //     FL: { ...prev.FL, status: 'idle', rpm: 0 },
+  //     FR: { ...prev.FR, status: 'idle', rpm: 0 },
+  //     BL: { ...prev.BL, status: 'idle', rpm: 0 },
+  //     BR: { ...prev.BR, status: 'idle', rpm: 0 },
+  //   }));
+  //   timeRef.current = 0;
+  // };
 
   const handleMotorClick = useCallback((id: MotorPosition) => {
     setSelectedMotor(id);
@@ -358,10 +356,10 @@ export default function DroneVisualizer() {
   };
 
   // Manual Control Handlers
-  const updateImuManual = (key: keyof IMUData, value: number) => {
-    imuRef.current = { ...imuRef.current, [key]: value };
-    setUiData({ ...imuRef.current });
-  };
+  // const updateImuManual = (key: keyof IMUData, value: number) => {
+  //   imuRef.current = { ...imuRef.current, [key]: value };
+  //   setUiData({ ...imuRef.current });
+  // };
 
   return (
     <div className='relative w-full h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans selection:bg-blue-500/30'>

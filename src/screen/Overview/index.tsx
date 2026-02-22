@@ -32,10 +32,8 @@ export default function OverviewScreen() {
   // const [selectedMotor, setSelectedMotor] = useState<MotorPosition | null>(
   //   null
   // );
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [simulationMode, setSimulationMode] = useState<'manual' | 'auto'>(
-    'manual'
-  );
+  const [isSimulating] = useState(false);
+  const [simulationMode] = useState<'manual' | 'auto'>('manual');
 
   // Refs for simulation loop
   const timeRef = useRef(0);
