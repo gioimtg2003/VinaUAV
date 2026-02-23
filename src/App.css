@@ -213,3 +213,10 @@ button {
     @apply bg-background text-foreground;
   }
 }
+
+/* Prevent overscroll/rubber-band effect on webView */
+html,
+body {
+  overscroll-behavior: none;
+  overflow: hidden;
+}
