@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 export const SIZE_ICON = 16;
+export const TOP_SAFE_AREA_PADDING = 'pt-12.5';
 
 export const ROUTES = {
   OVERVIEW: '/',
