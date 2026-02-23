@@ -26,3 +26,4 @@ dist-ssr
 .tauri/update.key
 
 .env
+.secrets
