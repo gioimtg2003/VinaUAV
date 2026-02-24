@@ -43,6 +43,7 @@ jobs:
             TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
           with:
+              runner: bun
               tagName: v__VERSION__
               releaseName: "Vina UAV v__VERSION__"
               releaseBody: |
