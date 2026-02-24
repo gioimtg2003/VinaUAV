@@ -1,38 +1,11 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
-use std::collections::HashMap;
-use tauri::menu::MenuBuilder;
-use tauri::AppHandle;
+use tauri_plugin_updater::UpdaterExt;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
-
-const links: [(&str, &str, &str); 5] = [
-    (
-        "open-social-netlify",
-        "Netlify",
-        "https://app.netlify.com/teams/christopherbiscardi/overview",
-    ),
-    (
-        "open-social-youtube",
-        "YouTube",
-        "https://www.youtube.com/@chrisbiscardi",
-    ),
-    ("open-social-twitter", "Twitter", "https://twitter.com/"),
-    // github links
-    (
-        "open-github-rust-adventure",
-        "Rust Adventure",
-        "https://github.com/rust-adventure",
-    ),
-    (
-        "open-github-bevy",
-        "Bevy",
-        "https://github.com/bevyengine/bevy",
-    ),
-];
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -41,10 +14,35 @@ pub fn run() {
             #[cfg(desktop)]
             app.handle()
                 .plugin(tauri_plugin_updater::Builder::new().build());
+
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![greet])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+async fn update(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
+    if let Some(update) = app.updater()?.check().await? {
+        let mut downloaded = 0;
+
+        // alternatively we could also call update.download() and update.install() separately
+        update
+            .download_and_install(
+                |chunk_length, content_length| {
+                    downloaded += chunk_length;
+                    println!("downloaded {downloaded} from {content_length:?}");
+                },
+                || {
+                    println!("download finished");
+                },
+            )
+            .await?;
+
+        println!("update installed");
+        app.restart();
+    }
+
+    Ok(())
 }

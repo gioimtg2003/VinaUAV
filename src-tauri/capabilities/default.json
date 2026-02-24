@@ -11,6 +11,11 @@
     "core:window:allow-minimize",
     "core:window:allow-close",
     "core:window:allow-maximize",
-    "core:window:allow-unmaximize"
+    "core:window:allow-unmaximize",
+    "updater:default",
+    "updater:allow-check",
+    "updater:allow-download",
+    "updater:allow-install",
+    "updater:allow-download-and-install"
   ]
 }
