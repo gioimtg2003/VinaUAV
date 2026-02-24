@@ -7,6 +7,9 @@
   "inlay_hints": {
     "enabled": false,
   },
+  "file_types": {
+    "GitHub Actions": [".github/workflows/*.yml", ".github/workflows/*.yaml"],
+  },
   "languages": {
     "Rust": {
       "enable_language_server": true,
@@ -48,9 +51,6 @@
     "**/*.contentlayer",
     "**/*.next",
     "**/dist",
-    "apps/mobile/ios/Pods",
-    "apps/mobile/android",
-    "apps/mobile/ios",
     "**/.git",
     "**/.svn",
     "**/.hg",

@@ -1,8 +1,8 @@
 [package]
 name = "vinauav"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Application for managing UAVs"
+authors = ["Nguyen Cong Gioi"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -25,4 +25,3 @@ serde_json = "1"
 
 [target."cfg(windows)".dependencies]
 tauri-plugin-updater = "2.10.0"
-

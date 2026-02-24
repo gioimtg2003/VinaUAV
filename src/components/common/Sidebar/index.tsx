@@ -36,7 +36,7 @@ export default function AppSidebar() {
     <Sidebar
       collapsible='icon'
       classNameInner='bg-background/60'
-      className='bg-surface'
+      className='bg-surface select-none '
     >
       <SidebarHeader>
         <SidebarMenu>

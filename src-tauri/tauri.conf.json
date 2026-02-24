@@ -26,11 +26,7 @@
         "dragDropEnabled": true,
         "decorations": false,
 
-        "windowEffects": {
-          "effects": ["sidebar"],
-          "state": "followsWindowActiveState",
-          "radius": 9
-        }
+        "titleBarStyle": "Overlay"
       }
     ],
     "security": {

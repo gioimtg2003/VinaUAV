@@ -28,6 +28,7 @@ jobs:
           with:
             workspaces: "src-tauri -> target"
 
+
         - name: Setup Bun
           uses: oven-sh/setup-bun@v2
 

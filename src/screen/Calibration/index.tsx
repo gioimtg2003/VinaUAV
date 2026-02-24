@@ -11,7 +11,7 @@ export default function CalibrationScreen() {
   const [selectedSensorId, setSelectedSensorId] = useState<string | null>(null);
 
   return (
-    <div className='relative w-full h-screen bg-background text-text-main overflow-hidden'>
+    <div className='relative w-full h-full bg-background text-text-main overflow-hidden'>
       <div className='absolute inset-0 z-0'>
         <Canvas shadows camera={{ position: [0, 8, 10], fov: 45 }}>
           <color attach='background' args={['#0f172a']} />
