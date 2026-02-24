@@ -16,9 +16,11 @@ jobs:
           uses: actions/checkout@v2
 
         - name:  Install Rust stable
-          uses: dtolnay/rust-toolchain@stable
+          uses: actions-rs/toolchain@v1
           with:
-            targets: x86_64-pc-windows-msvc
+              toolchain: stable
+              target: x86_64-pc-windows-msvc
+              override: true
 
         #  Cargo use all CPU to build => use large RAM
         - name: Rust Cache
@@ -27,7 +29,7 @@ jobs:
             workspaces: "src-tauri -> target"
 
         - name: Setup Bun
-          uses: bunjs/setup-bun@v1
+          uses: oven-sh/setup-bun@v2
 
         - name: Install Dependencies
           run: bun install
@@ -53,7 +55,7 @@ jobs:
 
               releaseDraft: true
               prerelease: false
-              args: "--bundle nsis,msi"
+              args: "--bundles nsis,msi"
               includeUpdaterJson: true
 
         - name: Upload Artifacts
