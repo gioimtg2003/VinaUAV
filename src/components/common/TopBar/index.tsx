@@ -16,7 +16,7 @@ export default function Topbar() {
   return (
     <header className='w-full flex justify-between items-center select-none h-12.5 fixed top-0 left-0 right-0  bg-background  border-b border-b-border'>
       <div data-tauri-drag-region className='h-full w-full flex items-center'>
-        <h2 className='text-primary h-fit text-xl font-bold'>VinaUAVsss</h2>
+        <h2 className='text-primary h-fit text-xl font-bold'>VinaUAV</h2>
       </div>
       <div className='flex items-center justify-center gap-8 mr-2 shrink-0 h-full'>
         <div className='flex items-center justify-between h-6 gap-2'>

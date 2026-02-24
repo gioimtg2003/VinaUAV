@@ -14,7 +14,11 @@ pub fn run() {
             #[cfg(desktop)]
             app.handle()
                 .plugin(tauri_plugin_updater::Builder::new().build());
+            let handle = app.handle().clone();
 
+            tauri::async_runtime::spawn(async move {
+                update(handle).await.unwrap();
+            });
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
