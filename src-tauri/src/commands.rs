@@ -10,14 +10,14 @@ pub fn connect_device(
     connect_type: ConnectType,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-
     let device = AppState::new(AppConfig {
         connect_type,
         baud_rate: baud,
         port,
     });
-    device.connect_device(state)
+    device.init_app(state)
 }
+
 // disconnect to device
 #[tauri::command]
 pub fn disconnect_device(state: State<'_, AppState>) -> Result<(), String> {

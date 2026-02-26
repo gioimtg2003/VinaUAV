@@ -29,7 +29,7 @@ impl AppState {
         }
     }
 
-    pub fn connect_device(&self, state: State<'_, AppState>) -> Result<(), String> {
+    pub fn init_app(&self, state: State<'_, AppState>) -> Result<(), String> {
         let mut lock = state.conn.lock().unwrap();
         let mut connected = self.is_connected.lock().unwrap();
         let config = self.config.lock().unwrap();
