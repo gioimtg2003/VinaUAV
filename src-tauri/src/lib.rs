@@ -2,6 +2,7 @@
 
 mod commands;
 mod core;
+mod ultis;
 
 use tauri_plugin_updater::UpdaterExt;
 

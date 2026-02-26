@@ -1,5 +1,6 @@
 use crate::core::config::{AppConfig, ConnectType};
 use crate::core::AppState;
+use crate::ultis::clear_connect_device;
 use tauri::State;
 
 // connect to device
@@ -21,7 +22,7 @@ pub fn connect_device(
 // disconnect to device
 #[tauri::command]
 pub fn disconnect_device(state: State<'_, AppState>) -> Result<(), String> {
-    *state.conn.lock().unwrap() = None;
+    let _ = clear_connect_device(state);
 
     println!("Disconnected device");
     Ok(())
