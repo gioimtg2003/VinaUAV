@@ -19,4 +19,10 @@ pub fn connect_device(
     device.connect_device(state)
 }
 // disconnect to device
+#[tauri::command]
+pub fn disconnect_device(state: State<'_, AppState>) -> Result<(), String> {
+    *state.conn.lock().unwrap() = None;
 
+    println!("Disconnected device");
+    Ok(())
+}
