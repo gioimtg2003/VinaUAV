@@ -2,12 +2,12 @@
 
 mod commands;
 mod core;
-mod ultis;
 mod hardware;
+mod ultis;
 
 use tauri_plugin_updater::UpdaterExt;
 
-use crate::commands::{connect_device, disconnect_device, get_ports_available};
+use crate::commands::{connect_device, disconnect_device, get_ports_available, motor_test};
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -33,7 +33,8 @@ pub fn run() {
             greet,
             connect_device,
             get_ports_available,
-            disconnect_device
+            disconnect_device,
+            motor_test
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

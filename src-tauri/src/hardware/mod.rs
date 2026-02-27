@@ -1,1 +1,1 @@
-mod motor;
+pub mod motor;

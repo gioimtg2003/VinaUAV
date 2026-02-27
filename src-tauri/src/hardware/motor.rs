@@ -43,23 +43,22 @@ impl MotorPosition {
     }
 }
 pub struct Motor {
-    name: String,
-
+    // name: String,
     id: MotorPosition,
 }
 
 impl Motor {
-    pub fn new(name: String, id: MotorPosition) -> Motor {
-        Motor { name, id }
+    pub fn new(id: MotorPosition) -> Motor {
+        Motor { id }
     }
-    pub fn name(&self) -> &str {
-        &self.name
-    }
+    // pub fn name(&self) -> &str {
+    //     &self.name
+    // }
     pub fn id(&self) -> &str {
         &self.id.as_str()
     }
 
-    pub fn test(&self, state: State<'_, AppState>, id: String, rate: u32) -> Result<(), String> {
+    pub fn test(&self, state: State<'_, AppState>, rate: u32) -> Result<(), String> {
         if (rate > 100) {
             return Err("Capacity is too large!".to_string());
         }

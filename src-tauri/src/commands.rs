@@ -1,5 +1,6 @@
 use crate::core::config::{AppConfig, ConnectType};
 use crate::core::AppState;
+use crate::hardware::motor::{Motor, MotorPosition};
 use crate::ultis::clear_connect_device;
 use tauri::State;
 
@@ -34,4 +35,9 @@ pub fn get_ports_available() -> Vec<String> {
         .map_err(|e| e.to_string())
         .unwrap();
     ports.iter().map(|p| p.port_name.clone()).collect()
+}
+
+#[tauri::command]
+pub fn motor_test(state: State<'_, AppState>, id: MotorPosition, rate: u32) -> Result<(), String> {
+    Motor::new(id).test(state, rate)
 }
