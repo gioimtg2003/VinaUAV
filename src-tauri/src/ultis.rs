@@ -10,7 +10,7 @@ pub fn clear_connect_device(state: State<'_, AppState>) -> Result<(), String> {
     Ok(())
 }
 
-pub fn send_serial_raw(state: State<'_, AppState>, text: String) -> Result<(), String> {
+pub fn send_serial_raw(state: &State<'_, AppState>, text: String) -> Result<(), String> {
     if is_serial_connect(&state.config) {
         let mut lock = state
             .conn

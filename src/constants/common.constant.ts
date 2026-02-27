@@ -21,10 +21,10 @@ export const ROUTES = {
 };
 
 export const DRONE_MOTORS: Record<MotorPosition, MotorState> = {
-  FL: { id: 'FL', label: 'Front Left', rpm: 0, status: 'idle', temp: 24 },
-  FR: { id: 'FR', label: 'Front Right', rpm: 0, status: 'idle', temp: 24 },
-  BL: { id: 'BL', label: 'Back Left', rpm: 0, status: 'idle', temp: 24 },
-  BR: { id: 'BR', label: 'Back Right', rpm: 0, status: 'idle', temp: 24 },
+  FL: { id: 'FL', label: 'Motor 3', rpm: 0, status: 'idle', temp: 24 },
+  FR: { id: 'FR', label: 'Motor 1', rpm: 0, status: 'idle', temp: 24 },
+  BL: { id: 'BL', label: 'Motor 4', rpm: 0, status: 'idle', temp: 24 },
+  BR: { id: 'BR', label: 'Motor 2', rpm: 0, status: 'idle', temp: 24 },
 };
 
 export const SENSOR_CALIBRATION_LIST = [

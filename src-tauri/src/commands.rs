@@ -27,3 +27,11 @@ pub fn disconnect_device(state: State<'_, AppState>) -> Result<(), String> {
     println!("Disconnected device");
     Ok(())
 }
+
+#[tauri::command]
+pub fn get_ports_available() -> Vec<String> {
+    let ports = serialport::available_ports()
+        .map_err(|e| e.to_string())
+        .unwrap();
+    ports.iter().map(|p| p.port_name.clone()).collect()
+}
