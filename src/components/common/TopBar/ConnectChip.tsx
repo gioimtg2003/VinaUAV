@@ -18,31 +18,42 @@ import {
 } from '@/components/ui/tooltip';
 import { SIZE_ICON } from '@/constants';
 import { chipStore } from '@/stores/chipStore';
+import { invoke } from '@tauri-apps/api/core';
 import { Cable, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function ConnectChip() {
   const [selectedCom, setSelectedCom] = useState<string>();
+  const [listCom, setListCom] = useState<string[]>([]);
   const [selectedBaudRate, setSelectedBaudRate] = useState<string>();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const _ports = await invoke<string[]>('get_ports_available');
+      setListCom(_ports);
+    })();
+  }, []);
+
   const baudRates = [9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600];
-  const listCom = [
-    'COM1',
-    'COM2',
-    'COM3',
-    'COM4',
-    'COM5',
-    'COM6',
-    'COM7',
-    'COM8',
-  ];
 
   const connect = chipStore((store) => store?.isConnected);
   const setConnect = chipStore((store) => store?.setIsConnected);
 
-  const handleConnect = () => {
-    // Implement the logic to connect to the selected COM port and baud rate
-    // Example: chipStore.connect(selectedCom, selectedBaudRate);
-    setConnect(true);
+  const handleConnect = async () => {
+    try {
+      setLoading(true);
+      await invoke('connect_driver', {
+        port: selectedCom,
+        baudRate: Number(selectedBaudRate),
+        fcType: 'pixhawk',
+      });
+      setConnect(true);
+    } catch (error) {
+      console.error('Connection error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDisconnect = () => {

@@ -10,7 +10,7 @@ use std::time::Duration;
 use tauri::State;
 
 pub struct DroneManager {
-    pub driver: Arc<Mutex<Option<Box<dyn DroneDriver>>>>,
+    pub driver: Arc<tokio::sync::Mutex<Option<Box<dyn DroneDriver>>>>,
 }
 pub enum DroneLink {
     Pixhawk(Box<dyn MavConnection<MavMessage> + Send>),

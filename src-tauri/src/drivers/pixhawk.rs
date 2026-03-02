@@ -16,6 +16,7 @@ pub struct PixhawkDriver {
 #[async_trait]
 impl DroneDriver for PixhawkDriver {
     async fn connect(&mut self, port: &str, baud_rate: u32) -> anyhow::Result<()> {
+        println!("Connecting to port: {}", port);
         if self.is_connected {
             return Ok(());
         }
@@ -23,6 +24,7 @@ impl DroneDriver for PixhawkDriver {
         let connection_string = format!("serial:{}:{}", port, baud_rate);
         let mav_connection = mavlink::connect::<MavMessage>(&connection_string)
             .with_context(|| format!("Mavlink Connect Error: {:?}", connection_string))?;
+
 
         self.connect = Some(Mutex::new(mav_connection));
         self.is_connected = true;

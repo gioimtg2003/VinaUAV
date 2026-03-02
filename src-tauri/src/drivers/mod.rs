@@ -28,6 +28,7 @@ impl DriverManager {
     }
 
     pub fn switch_driver(&mut self, driver_type: &str) {
+        println!("Switching driver {}", driver_type);
         match driver_type {
             "esp32" => {
                 self.driver = Some(Box::new(Esp32Driver {

@@ -9,7 +9,7 @@ mod ultis;
 use std::sync::{Arc, Mutex};
 use tauri_plugin_updater::UpdaterExt;
 
-use crate::commands::{connect_device, disconnect_device, get_ports_available, motor_test};
+use crate::commands::{connect_driver, get_ports_available};
 use crate::core::DroneManager;
 
 #[tauri::command]
@@ -33,10 +33,10 @@ pub fn run() {
         })
         .plugin(tauri_plugin_opener::init())
         .manage(DroneManager {
-            driver: Arc::new(Mutex::new(None)),
+            driver: Arc::new(tokio::sync::Mutex::new(None)),
         })
         .invoke_handler(tauri::generate_handler![
-            connect_device,
+            connect_driver,
             get_ports_available,
         ])
         .run(tauri::generate_context!())

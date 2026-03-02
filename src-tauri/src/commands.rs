@@ -8,14 +8,15 @@ use tauri::State;
 
 // connect to device
 #[tauri::command]
-pub fn connect_device(
+pub async fn connect_driver(
     port: String,
     baud_rate: u32,
     fc_type: String,
     state: State<'_, DroneManager>,
 ) -> Result<(), String> {
-    let mut drone = state.driver.lock().unwrap();
+    let mut drone = state.driver.lock().await;
 
+    println!("Connecting driver");
     let mut driver: Box<dyn DroneDriver> = match fc_type.as_str() {
         "esp32" => Box::new(Esp32Driver {
             is_connected: false,
@@ -31,9 +32,12 @@ pub fn connect_device(
         }),
         _ => return Err(format!("Unknown FcType: {}", fc_type)),
     };
-    let _ = driver.connect(&port, baud_rate);
 
-    *drone = Some(driver);
+    driver
+        .connect(&port, baud_rate)
+        .await
+        .expect("TODO: panic message");
+
 
     Ok(())
 }
