@@ -1,9 +1,16 @@
+use async_trait::async_trait;
 use crate::commands::connect_device;
 use crate::core::{AppState, DroneLink};
 use crate::ultis::{is_serial_connect, send_serial_raw};
 use mavlink::common::MavMessage;
 use mavlink::MavHeader;
 use tauri::State;
+
+#[async_trait]
+pub trait ActuatorModule: Send + Sync {
+    async fn connect(&self) -> anyhow::Result<()>;
+}
+
 
 pub enum MotorPosition {
     Motor1,

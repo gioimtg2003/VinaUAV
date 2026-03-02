@@ -1,5 +1,7 @@
-use crate::core::config::{AppConfig, ConnectType};
-use crate::core::AppState;
+use crate::core::{AppState, DroneManager};
+use crate::drivers::esp32::Esp32Driver;
+use crate::drivers::pixhawk::PixhawkDriver;
+use crate::drivers::DroneDriver;
 use crate::hardware::motor::{Motor, MotorPosition};
 use crate::ultis::clear_connect_device;
 use tauri::State;
@@ -8,16 +10,32 @@ use tauri::State;
 #[tauri::command]
 pub fn connect_device(
     port: String,
-    baud: u32,
-    connect_type: ConnectType,
-    state: State<'_, AppState>,
+    baud_rate: u32,
+    fc_type: String,
+    state: State<'_, DroneManager>,
 ) -> Result<(), String> {
-    let device = AppState::new(AppConfig {
-        connect_type,
-        baud_rate: baud,
-        port,
-    });
-    device.init_app(state)
+    let mut drone = state.driver.lock().unwrap();
+
+    let mut driver: Box<dyn DroneDriver> = match fc_type.as_str() {
+        "esp32" => Box::new(Esp32Driver {
+            is_connected: false,
+            port: port.clone(),
+            baud_rate,
+            connect: None,
+        }),
+        "pixhawk" => Box::new(PixhawkDriver {
+            is_connected: false,
+            port: port.clone(),
+            baud_rate,
+            connect: None,
+        }),
+        _ => return Err(format!("Unknown FcType: {}", fc_type)),
+    };
+    let _ = driver.connect(&port, baud_rate);
+
+    *drone = Some(driver);
+
+    Ok(())
 }
 
 // disconnect to device

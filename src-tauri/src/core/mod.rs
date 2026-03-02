@@ -1,6 +1,7 @@
 pub mod config;
 
 use crate::core::config::{AppConfig, ConnectType};
+use crate::drivers::DroneDriver;
 use mavlink::{common::MavMessage, MavConnection};
 use serialport::SerialPort;
 use std::sync::{Arc, Mutex};
@@ -8,6 +9,9 @@ use std::thread::sleep;
 use std::time::Duration;
 use tauri::State;
 
+pub struct DroneManager {
+    pub driver: Arc<Mutex<Option<Box<dyn DroneDriver>>>>,
+}
 pub enum DroneLink {
     Pixhawk(Box<dyn MavConnection<MavMessage> + Send>),
     ESP32(Box<dyn SerialPort>),
@@ -34,7 +38,7 @@ impl AppState {
         let mut connected = self.is_connected.lock().unwrap();
         let config = self.config.lock().unwrap();
 
-        if lock.is_none() || *connected  {
+        if lock.is_none() || *connected {
             *lock = None;
             *connected = false;
             sleep(Duration::from_millis(100));

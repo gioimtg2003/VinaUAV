@@ -2,12 +2,15 @@
 
 mod commands;
 mod core;
+mod drivers;
 mod hardware;
 mod ultis;
 
+use std::sync::{Arc, Mutex};
 use tauri_plugin_updater::UpdaterExt;
 
 use crate::commands::{connect_device, disconnect_device, get_ports_available, motor_test};
+use crate::core::DroneManager;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -29,12 +32,12 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
+        .manage(DroneManager {
+            driver: Arc::new(Mutex::new(None)),
+        })
         .invoke_handler(tauri::generate_handler![
-            greet,
             connect_device,
             get_ports_available,
-            disconnect_device,
-            motor_test
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
