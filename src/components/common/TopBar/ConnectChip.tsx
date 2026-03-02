@@ -26,7 +26,7 @@ export default function ConnectChip() {
   const [selectedCom, setSelectedCom] = useState<string>();
   const [listCom, setListCom] = useState<string[]>([]);
   const [selectedBaudRate, setSelectedBaudRate] = useState<string>();
-  const [loading, setLoading] = useState(false);
+  const [_, setLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
